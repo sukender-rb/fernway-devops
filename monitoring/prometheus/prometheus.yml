@@ -1,0 +1,34 @@
+# Deploy Prometheus itself via the kube-prometheus-stack Helm chart
+# (adds Prometheus, Alertmanager, and Grafana together, with sane
+# defaults) rather than hand-rolling the Deployment/Service/RBAC for it.
+#
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm install monitoring prometheus-community/kube-prometheus-stack \
+#     --namespace monitoring --create-namespace
+#
+# This file documents the extra scrape config to merge into that
+# release's values (via the `values.yaml` override at
+# `prometheus.prometheusSpec.additionalScrapeConfigs`) so it also
+# scrapes your app, not just cluster-internal metrics.
+
+scrape_configs:
+  - job_name: "fernway-backend"
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: ["fernway"]
+    # Only scrape pods that opted in via the annotations set in
+    # k8s/backend-deployment.yaml — avoids scraping every pod in the namespace.
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__

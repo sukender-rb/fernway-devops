@@ -1,0 +1,7 @@
+---
+# Run with: ansible-playbook -i inventory.ini playbook.yml
+- name: Bootstrap the Jenkins host
+  hosts: jenkins
+  become: true
+  roles:
+    - common

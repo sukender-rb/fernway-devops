@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fernway_user
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: fernway
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Files in this folder run automatically, in filename order, the
+      # FIRST time the container starts with an empty database.
+      - ./db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fernway_user -d fernway"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      # "db" here is the service name above — Docker's internal DNS
+      # resolves it to the postgres container's IP. This only works
+      # inside the compose network, not from your host shell.
+      DATABASE_URL: postgresql://fernway_user:changeme@db:5432/fernway
+      CORS_ORIGIN: "*"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Runs in your browser, not inside Docker's network — so it must
+        # use the port published to your HOST machine, not the service name.
+        VITE_API_URL: http://localhost:4000
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+  jenkins:
+    build: ./jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Mounts the HOST's Docker socket into the container so Jenkins
+      # can run `docker build` — it uses your existing Docker Desktop
+      # daemon instead of running Docker-inside-Docker.
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  sonarqube:
+    image: sonarqube:community
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      # SonarQube normally requires Elasticsearch bootstrap checks that
+      # need a higher vm.max_map_count on the host. This flag skips
+      # that check — fine for local learning, NOT something you'd do
+      # on a real server (see jenkins/README.md for the proper fix).
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+
+volumes:
+  pgdata:
+  jenkins_home:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

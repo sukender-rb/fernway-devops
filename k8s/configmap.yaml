@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fernway-config
+  namespace: fernway
+data:
+  PORT: "4000"
+  CORS_ORIGIN: "*" # tighten this to your real domain once you have one

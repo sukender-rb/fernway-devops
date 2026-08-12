@@ -1,0 +1,39 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  apt:
+    name:
+      - docker.io
+      - git
+      - unattended-upgrades # automatic security patches — basic hardening
+    state: present
+
+- name: Enable automatic security updates
+  copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Ensure Docker is running and enabled
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add the SSH user to the docker group
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+
+- name: Disable password authentication over SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
+  notify: restart sshd
