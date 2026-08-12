@@ -48,6 +48,7 @@ services:
     depends_on:
       - backend
 
+<<<<<<< HEAD
   jenkins:
     build: ./jenkins
     restart: unless-stopped
@@ -82,3 +83,7 @@ volumes:
   sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
+=======
+volumes:
+  pgdata:
+>>>>>>> 53e545a833f2ebb402e8702c45faa1d2a2538aec
