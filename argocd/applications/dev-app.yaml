@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fernway-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/fernway-devops.git
+    targetRevision: dev
+    path: k8s/overlays/dev
+  destination:
+    # Same cluster ArgoCD itself runs in — correct if ArgoCD lives in the
+    # dev cluster. See argocd/README.md for staging/prod, which live on
+    # separate clusters and need a real cluster server URL here instead.
+    server: https://kubernetes.default.svc
+    namespace: fernway
+  syncPolicy:
+    automated:
+      # prune: removes resources from the cluster that got deleted from Git
+      # selfHeal: reverts any manual kubectl change back to match Git —
+      # this is the actual GitOps guarantee: Git is the only source of truth.
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

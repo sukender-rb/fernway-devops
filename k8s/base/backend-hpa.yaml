@@ -1,0 +1,22 @@
+# Requires the Kubernetes metrics-server add-on (install separately;
+# most EKS clusters need it added — it doesn't ship by default).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: fernway
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # Add another replica once average CPU across pods crosses 70%.
+          averageUtilization: 70

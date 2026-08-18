@@ -31,6 +31,12 @@ Paste that into the browser. Since the setup wizard is disabled, you'll go strai
 
 Restart Jenkins if it asks.
 
+## What Jenkins actually does now (GitOps)
+
+Jenkins no longer deploys to the cluster directly. It builds, tests, scans, pushes the image to ECR, then updates the image tag in `k8s/overlays/<env>/kustomization.yaml` and **commits that change back to Git**. ArgoCD (see `argocd/README.md`) is what actually applies it to the cluster. See the comment block at the top of the `Jenkinsfile` for the full flow.
+
+This means your `github-credentials` token needs **write** access to the repo, not just read — Jenkins has to push a commit.
+
 ## 3b. Set up SonarQube (code quality scanning)
 
 ```bash
@@ -116,6 +122,6 @@ This pipeline assumes things that don't exist yet:
 - SonarQube configured with a project + webhook (section 3b above)
 - The `fernway-dev` EKS cluster (from `terraform apply`)
 - ECR repos already created (also from Terraform)
-- The `k8s/` manifests already applied once manually, so `kubectl set image` has a `deployment/backend` to update
+- **ArgoCD installed and bootstrapped** — see `argocd/README.md`. Jenkins now only updates Git; ArgoCD is what actually applies changes to the cluster. Without ArgoCD running, Jenkins will succeed and Git will update, but nothing will actually deploy.
 
-Run those first. Jenkins updates an existing deployment — it doesn't create the cluster or the first deployment from scratch.
+Run those first.

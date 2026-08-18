@@ -1,0 +1,26 @@
+# "App of apps" pattern. You apply THIS one file, once, by hand:
+#   kubectl apply -f argocd/root-app.yaml
+#
+# From then on, ArgoCD watches argocd/applications/ in Git. Adding a new
+# file there (e.g. a 4th environment) is enough to register it — no more
+# manual kubectl apply needed for anything under this repo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fernway-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/fernway-devops.git
+    targetRevision: main
+    path: argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

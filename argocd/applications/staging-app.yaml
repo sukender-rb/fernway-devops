@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fernway-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/fernway-devops.git
+    targetRevision: staging
+    path: k8s/overlays/staging
+  destination:
+    # Staging runs on its OWN EKS cluster (fernway-staging, from Terraform)
+    # — this is a different cluster than the one ArgoCD is installed in.
+    # Register it first: argocd cluster add <fernway-staging-context>
+    # then replace this with the server URL `argocd cluster list` shows.
+    server: https://REPLACE_WITH_STAGING_CLUSTER_API_SERVER
+    namespace: fernway
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

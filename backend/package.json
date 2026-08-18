@@ -6,10 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-<<<<<<< HEAD
     "test": "echo \"TODO: add real tests — this placeholder just keeps the pipeline green\" && exit 0",
-=======
->>>>>>> 53e545a833f2ebb402e8702c45faa1d2a2538aec
     "migrate": "psql \"$DATABASE_URL\" -f db/schema.sql",
     "seed": "psql \"$DATABASE_URL\" -f db/seed.sql"
   },
@@ -18,11 +15,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
-<<<<<<< HEAD
     "pg": "^8.12.0",
     "prom-client": "^15.1.3"
-=======
-    "pg": "^8.12.0"
->>>>>>> 53e545a833f2ebb402e8702c45faa1d2a2538aec
   }
 }

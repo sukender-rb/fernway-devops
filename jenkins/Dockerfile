@@ -5,7 +5,7 @@ USER root
 # Docker CLI (talks to the host's Docker daemon via the mounted socket
 # in docker-compose.yml — Jenkins itself doesn't run its own daemon)
 RUN apt-get update && apt-get install -y \
-      ca-certificates curl gnupg lsb-release unzip \
+      ca-certificates curl gnupg lsb-release unzip git \
     && install -m 0755 -d /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
     && chmod a+r /etc/apt/keyrings/docker.gpg \
@@ -13,6 +13,15 @@ RUN apt-get update && apt-get install -y \
       > /etc/apt/sources.list.d/docker.list \
     && apt-get update && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
+
+# kustomize (builds/edits the GitOps overlays in k8s/overlays/*).
+# Downloading the release tarball directly instead of the official
+# install script — the script hit GitHub's anonymous API rate limit
+# during testing; this avoids that API call entirely.
+RUN curl -sL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" \
+      -o /tmp/kustomize.tar.gz \
+    && tar xzf /tmp/kustomize.tar.gz -C /usr/local/bin \
+    && rm /tmp/kustomize.tar.gz
 
 # AWS CLI v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \

@@ -9,13 +9,18 @@ fernway-devops/
   frontend/          # React storefront (Vite build → Nginx)
   backend/            # Express API, exposes /health and /metrics
   db-init/             # Postgres schema + seed data (local Docker Compose only)
-  docker-compose.yml    # Local dev environment — all 3 tiers, one command
+  docker-compose.yml    # Local dev environment — all 5 services, one command
   terraform/             # Infrastructure as code (VPC, EKS, RDS, ECR, ALB controller)
-  k8s/                     # Kubernetes manifests — how the app actually runs in the cluster
-  ansible/                  # Bootstraps any plain EC2 boxes outside the cluster (e.g. Jenkins)
-  monitoring/                # Prometheus scrape config + Grafana datasource/dashboard
-  SETUP-GUIDE.md               # Local setup walkthrough
-  PRODUCTION-ROADMAP.md         # Full phase-by-phase plan
+  k8s/
+    base/                  # Shared manifests every environment uses
+    overlays/dev|staging|prod/  # Per-environment image tags, replica counts, patches
+  argocd/                    # GitOps: watches Git, syncs the cluster to match it
+  jenkins/                     # CI pipeline: test, scan, build, push, update Git
+  ansible/                      # Bootstraps any plain EC2 boxes outside the cluster
+  monitoring/                    # Prometheus scrape config + Grafana datasource/dashboard
+  sonar-project.properties        # SonarQube project definition
+  SETUP-GUIDE.md                   # Local setup walkthrough
+  PRODUCTION-ROADMAP.md             # Full phase-by-phase plan
 ```
 
 ## Local development
@@ -28,19 +33,11 @@ See `SETUP-GUIDE.md` for full details.
 ## Deploying to AWS
 
 1. **Terraform** — provisions the VPC, EKS cluster, RDS database, ECR repos, and the ALB Ingress Controller. See `terraform/README.md`.
-2. **Build & push images** — build the frontend/backend Docker images and push to the ECR repos Terraform created.
-3. **Kubernetes** — apply the manifests in `k8s/`, in this order:
-   ```bash
-   kubectl apply -f k8s/namespace.yaml
-   kubectl apply -f k8s/configmap.yaml
-   kubectl create secret generic fernway-db-secret --namespace fernway \
-     --from-literal=DATABASE_URL="<from terraform output rds_endpoint>"
-   kubectl apply -f k8s/backend-deployment.yaml -f k8s/backend-service.yaml -f k8s/backend-hpa.yaml
-   kubectl apply -f k8s/frontend-deployment.yaml -f k8s/frontend-service.yaml
-   kubectl apply -f k8s/ingress.yaml
-   ```
-4. **Monitoring** — install `kube-prometheus-stack` via Helm, then layer in the scrape config and dashboard from `monitoring/`. See `monitoring/prometheus/prometheus.yml` for exact commands.
-5. **CI/CD** — every push to GitHub triggers a pipeline that rebuilds images, pushes to ECR, and re-applies the `k8s/` manifests automatically. Pipeline definition TBD — see the note in `PRODUCTION-ROADMAP.md`.
+2. **ArgoCD** — install it in the cluster and bootstrap the app-of-apps. See `argocd/README.md`.
+3. **Jenkins** — set up credentials, the multibranch job, SonarQube. See `jenkins/README.md`.
+4. **Push code** — from here on, every push to `dev`/`staging`/`main` runs the pipeline: test → SonarQube → build → Trivy scan → push to ECR → update the Git overlay → ArgoCD syncs the cluster automatically (prod requires a manual click in the ArgoCD UI, by design).
+
+The actual "deploy" step is a Git commit, not a Jenkins-to-cluster connection — that's the GitOps model. Jenkins never touches the cluster directly.
 
 ## What's real vs. templated here
 

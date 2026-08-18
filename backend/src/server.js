@@ -6,15 +6,11 @@ const helmet = require("helmet");
 const { pool } = require("./db");
 const productsRouter = require("./routes/products");
 const ordersRouter = require("./routes/orders");
-<<<<<<< HEAD
 const client = require("prom-client");
-=======
->>>>>>> 53e545a833f2ebb402e8702c45faa1d2a2538aec
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-<<<<<<< HEAD
 // Standard process metrics (CPU, memory, event loop lag, etc.) plus a
 // custom histogram for request duration — this is what Prometheus scrapes.
 const register = new client.Registry();
@@ -28,13 +24,10 @@ const httpRequestDuration = new client.Histogram({
 });
 register.registerMetric(httpRequestDuration);
 
-=======
->>>>>>> 53e545a833f2ebb402e8702c45faa1d2a2538aec
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json());
 
-<<<<<<< HEAD
 app.use((req, res, next) => {
   const end = httpRequestDuration.startTimer();
   res.on("finish", () => {
@@ -52,8 +45,6 @@ app.get("/metrics", async (req, res) => {
   res.end(await register.metrics());
 });
 
-=======
->>>>>>> 53e545a833f2ebb402e8702c45faa1d2a2538aec
 // Health check — this is what Kubernetes will poll (liveness/readiness probes)
 app.get("/health", async (req, res) => {
   try {

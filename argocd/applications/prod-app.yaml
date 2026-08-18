@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fernway-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/fernway-devops.git
+    targetRevision: main
+    path: k8s/overlays/prod
+  destination:
+    # Its own EKS cluster too — see the note in staging-app.yaml.
+    server: https://REPLACE_WITH_PROD_CLUSTER_API_SERVER
+    namespace: fernway
+  syncPolicy:
+    # Deliberately NOT automated. Prod deploys get a manual click in the
+    # ArgoCD UI ("Sync") even though the manifest is already updated in
+    # Git — the same "manual approval before prod" real companies use.
+    syncOptions:
+      - CreateNamespace=true

@@ -21,23 +21,33 @@ pipeline {
           // actually created for each environment.
           if (env.BRANCH_NAME == 'main') {
             env.DEPLOY_ENV     = 'prod'
-            env.CLUSTER_NAME   = 'fernway-prod'
-            env.K8S_NAMESPACE  = 'fernway'
+            env.OVERLAY_PATH   = 'k8s/overlays/prod'
           } else if (env.BRANCH_NAME == 'staging') {
             env.DEPLOY_ENV     = 'staging'
-            env.CLUSTER_NAME   = 'fernway-staging'
-            env.K8S_NAMESPACE  = 'fernway'
+            env.OVERLAY_PATH   = 'k8s/overlays/staging'
           } else {
             env.DEPLOY_ENV     = 'dev'
-            env.CLUSTER_NAME   = 'fernway-dev'
-            env.K8S_NAMESPACE  = 'fernway'
+            env.OVERLAY_PATH   = 'k8s/overlays/dev'
           }
-          echo "Branch ${env.BRANCH_NAME} -> deploying to ${env.DEPLOY_ENV} (${env.CLUSTER_NAME})"
+
+          // Without this, the GitOps commit Jenkins makes later in this
+          // pipeline would itself trigger a new build via the GitHub
+          // webhook — which commits again — forever. Skip any build that
+          // was triggered by Jenkins' own commit.
+          def lastCommitMsg = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
+          if (lastCommitMsg.contains('[skip ci]')) {
+            env.SKIP_BUILD = 'true'
+            echo "Skipping — this commit was made by the pipeline itself: ${lastCommitMsg}"
+          } else {
+            env.SKIP_BUILD = 'false'
+            echo "Branch ${env.BRANCH_NAME} -> deploying to ${env.DEPLOY_ENV}"
+          }
         }
       }
     }
 
     stage('Backend: install & test') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         dir('backend') {
           sh 'npm ci'
@@ -47,6 +57,7 @@ pipeline {
     }
 
     stage('Frontend: install & build') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         dir('frontend') {
           sh 'npm ci'
@@ -56,6 +67,7 @@ pipeline {
     }
 
     stage('Code quality (SonarQube)') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         // 'SonarQube' here must match the server name configured in
         // Manage Jenkins -> System -> SonarQube servers (see jenkins/README.md).
@@ -66,6 +78,7 @@ pipeline {
     }
 
     stage('Quality gate') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         // Blocks here and fails the build if SonarQube's quality gate
         // fails — this only works once SonarQube is configured to call
@@ -77,6 +90,7 @@ pipeline {
     }
 
     stage('Build Docker images') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         sh "docker build -t fernway-backend:${IMAGE_TAG} ./backend"
         sh "docker build -t fernway-frontend:${IMAGE_TAG} ./frontend"
@@ -84,6 +98,7 @@ pipeline {
     }
 
     stage('Security scan (Trivy)') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         // Fails the build on HIGH/CRITICAL CVEs instead of silently
         // shipping a vulnerable image — this is the actual enforcement
@@ -94,6 +109,7 @@ pipeline {
     }
 
     stage('Push to ECR') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
           sh '''
@@ -110,17 +126,27 @@ pipeline {
       }
     }
 
-    stage('Deploy to EKS') {
+    stage('Update GitOps manifest') {
+      when { expression { env.SKIP_BUILD != 'true' } }
       steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+        // This is the actual "deploy" now — Jenkins never touches the
+        // cluster. It updates the image tag in the environment's overlay
+        // and pushes that to Git. ArgoCD (running in-cluster, watching
+        // this repo) picks up the commit and syncs the cluster itself.
+        withCredentials([
+          usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')
+        ]) {
           sh '''
-            aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+            cd $OVERLAY_PATH
+            kustomize edit set image fernway-backend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-backend:${IMAGE_TAG}
+            kustomize edit set image fernway-frontend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-frontend:${IMAGE_TAG}
+            cd -
 
-            kubectl set image deployment/backend backend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-backend:${IMAGE_TAG} -n $K8S_NAMESPACE
-            kubectl set image deployment/frontend frontend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-frontend:${IMAGE_TAG} -n $K8S_NAMESPACE
-
-            kubectl rollout status deployment/backend -n $K8S_NAMESPACE --timeout=180s
-            kubectl rollout status deployment/frontend -n $K8S_NAMESPACE --timeout=180s
+            git config user.email "jenkins-ci@fernway.local"
+            git config user.name "jenkins-ci"
+            git add $OVERLAY_PATH/kustomization.yaml
+            git commit -m "ci: deploy ${IMAGE_TAG} to ${DEPLOY_ENV} [skip ci]" || echo "Nothing changed, skipping commit"
+            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/<your-username>/fernway-devops.git" HEAD:${BRANCH_NAME}
           '''
         }
       }

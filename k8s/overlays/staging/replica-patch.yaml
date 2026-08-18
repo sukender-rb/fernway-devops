@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: fernway
+  name: backend
+spec:
+  replicas: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: fernway
+  name: frontend
+spec:
+  replicas: 2

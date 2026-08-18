@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: fernway
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+      annotations:
+        # Tells Prometheus (via the annotation-based scrape config) to
+        # find this pod automatically — no manual target list to maintain.
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "4000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: backend
+          # Placeholder name/tag on purpose — each overlay's kustomization.yaml
+          # rewrites this to the real ECR repo + tag for that environment.
+          # Jenkins updates the overlay (not this file) on every deploy.
+          image: fernway-backend:local
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+                name: fernway-config
+            - secretRef:
+                name: fernway-db-secret
+          # Kubernetes only sends traffic here once this passes —
+          # prevents a pod that's still starting up from receiving requests.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          # If this fails repeatedly, Kubernetes kills and restarts the
+          # pod automatically — this is the "self-healing" piece.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
