@@ -39,7 +39,7 @@ Terraform is what *creates* the AWS resources in that diagram (VPC, EC2, RDS, lo
    ```
    aws configure
    ```
-   It'll ask for Access Key, Secret Key, region (use `us-east-1` unless you have a reason not to), and output format (`json` is fine).
+   It'll ask for Access Key, Secret Key, region (use `eu-west-1` unless you have a reason not to), and output format (`json` is fine).
 5. Verify it works:
    ```
    aws sts get-caller-identity

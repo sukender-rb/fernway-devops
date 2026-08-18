@@ -12,7 +12,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /health
     # Uncomment once you have a domain + ACM certificate:
-    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:<ACCOUNT_ID>:certificate/<CERT_ID>
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:064589995443:certificate/<CERT_ID>
     # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
 spec:
   rules:

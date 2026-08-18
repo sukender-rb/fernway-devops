@@ -9,6 +9,6 @@
 # On Windows (PowerShell):
 #   $env:TF_VAR_db_password = "something-long-and-random"
 
-aws_region   = "us-east-1"
+aws_region   = "eu-west-1"
 environment  = "dev"
 cluster_name = "fernway-dev"

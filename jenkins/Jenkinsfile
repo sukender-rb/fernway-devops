@@ -6,7 +6,7 @@ pipeline {
   agent any
 
   environment {
-    AWS_REGION     = 'us-east-1'
+    AWS_REGION     = 'eu-west-1'
     AWS_ACCOUNT_ID = credentials('aws-account-id') // Jenkins "Secret text" credential
     IMAGE_TAG      = "${env.GIT_COMMIT.take(7)}"
   }
@@ -146,7 +146,7 @@ pipeline {
             git config user.name "jenkins-ci"
             git add $OVERLAY_PATH/kustomization.yaml
             git commit -m "ci: deploy ${IMAGE_TAG} to ${DEPLOY_ENV} [skip ci]" || echo "Nothing changed, skipping commit"
-            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/<your-username>/fernway-devops.git" HEAD:${BRANCH_NAME}
+            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/https://github.com/sukender-rb/fernway-devops.git" HEAD:${BRANCH_NAME}
           '''
         }
       }

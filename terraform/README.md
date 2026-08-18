@@ -57,7 +57,7 @@ terraform apply        # takes 15-20 minutes, mostly waiting on the EKS control 
 
 ```bash
 # Point kubectl at your new cluster (also printed as a Terraform output)
-aws eks update-kubeconfig --region us-east-1 --name fernway-dev
+aws eks update-kubeconfig --region eu-west-1 --name fernway-dev
 
 # Confirm you can see the cluster
 kubectl get nodes

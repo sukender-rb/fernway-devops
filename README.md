@@ -42,5 +42,5 @@ The actual "deploy" step is a Git commit, not a Jenkins-to-cluster connection �
 ## What's real vs. templated here
 
 - `frontend/`, `backend/`, `db-init/`, `docker-compose.yml`, `terraform/` — tested and working (backend endpoints verified with curl against a real running Postgres; Terraform syntax written carefully but not yet `terraform apply`'d — do that yourself first)
-- `k8s/*.yaml` — valid Kubernetes YAML (parsed and verified), but `<ACCOUNT_ID>` placeholders need your real AWS account ID before applying
+- `k8s/*.yaml` — valid Kubernetes YAML (parsed and verified), but `064589995443` placeholders need your real AWS account ID before applying
 - `ansible/`, `monitoring/` — scaffolding with real, working configuration, ready to point at real infrastructure once it exists

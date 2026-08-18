@@ -12,7 +12,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/<your-username>/fernway-devops.git
+    repoURL: https://github.com/https://github.com/sukender-rb/fernway-devops.git
     targetRevision: main
     path: argocd/applications
   destination:

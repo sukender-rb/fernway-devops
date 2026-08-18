@@ -6,10 +6,10 @@ resources:
 
 images:
   - name: fernway-backend
-    newName: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/fernway-backend
+    newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-backend
     newTag: prod-placeholder
   - name: fernway-frontend
-    newName: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/fernway-frontend
+    newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-frontend
     newTag: prod-placeholder
 
 patches:

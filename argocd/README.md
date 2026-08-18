@@ -16,7 +16,7 @@ This is a meaningfully different (and more correct) pattern than Jenkins deployi
 
 Start with the dev cluster:
 ```bash
-aws eks update-kubeconfig --region us-east-1 --name fernway-dev
+aws eks update-kubeconfig --region eu-west-1 --name fernway-dev
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
@@ -60,10 +60,10 @@ This one command registers the "root" app, which in turn tells ArgoCD to watch `
 Dev works out of the box because ArgoCD lives in that same cluster (`https://kubernetes.default.svc`). Staging and prod are **separate EKS clusters** (from Terraform), so ArgoCD needs to be told they exist:
 
 ```bash
-aws eks update-kubeconfig --region us-east-1 --name fernway-staging --alias fernway-staging
+aws eks update-kubeconfig --region eu-west-1 --name fernway-staging --alias fernway-staging
 argocd cluster add fernway-staging
 
-aws eks update-kubeconfig --region us-east-1 --name fernway-prod --alias fernway-prod
+aws eks update-kubeconfig --region eu-west-1 --name fernway-prod --alias fernway-prod
 argocd cluster add fernway-prod
 ```
 

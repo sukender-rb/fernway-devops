@@ -116,7 +116,7 @@ Create a new empty repository on GitHub (no README/license, so it stays empty), 
 ```bash
 git add .
 git commit -m "Initial commit: containerized 3-tier app"
-git remote add origin https://github.com/<your-username>/fernway.git
+git remote add origin https://github.com/https://github.com/sukender-rb/fernway.git
 git push -u origin main
 ```
 

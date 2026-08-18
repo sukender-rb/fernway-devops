@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/fernway-frontend:latest
+          image: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-frontend:latest
           ports:
             - containerPort: 80
           readinessProbe:
