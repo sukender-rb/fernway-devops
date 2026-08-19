@@ -25,7 +25,7 @@ resource "aws_security_group" "rds" {
 resource "aws_db_instance" "postgres" {
   identifier     = "${var.cluster_name}-postgres"
   engine         = "postgres"
-  engine_version = "16.3"
+  engine_version = "16"
 
   # db.t3.micro is free-tier eligible — fine for dev, not for prod load.
   instance_class    = "db.t3.micro"

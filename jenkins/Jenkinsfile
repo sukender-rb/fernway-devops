@@ -146,7 +146,7 @@ pipeline {
             git config user.name "jenkins-ci"
             git add $OVERLAY_PATH/kustomization.yaml
             git commit -m "ci: deploy ${IMAGE_TAG} to ${DEPLOY_ENV} [skip ci]" || echo "Nothing changed, skipping commit"
-            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/https://github.com/sukender-rb/fernway-devops.git" HEAD:${BRANCH_NAME}
+            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/sukender-rb/fernway-devops.git" HEAD:${BRANCH_NAME}
           '''
         }
       }

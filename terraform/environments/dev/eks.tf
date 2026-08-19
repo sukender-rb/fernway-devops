@@ -7,13 +7,13 @@ module "eks" {
   version = "~> 20.8"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.29"
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
   # Lets you `kubectl` in directly for debugging. Turn this off (or
   # restrict to your office/VPN IP) once this is a real prod cluster.
+  enable_cluster_creator_admin_permissions = true
   cluster_endpoint_public_access = true
 
   # Required so the ALB controller and other pods can assume IAM roles
