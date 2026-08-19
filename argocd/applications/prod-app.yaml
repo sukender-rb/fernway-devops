@@ -5,8 +5,13 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
   source:
-    repoURL: https://github.com/sukender-rb/fernway-devops.git
+    repoURL: hhttps://github.com/sukender-rb/fernway-devops.git
     targetRevision: main
     path: k8s/overlays/prod
   destination:
