@@ -13,7 +13,7 @@ images:
     newTag: v1
   - name: fernway-frontend
     newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-frontend
-    newTag: v2
+    newTag: v3
 
 patches:
   - path: replica-patch.yaml

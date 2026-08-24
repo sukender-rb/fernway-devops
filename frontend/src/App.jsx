@@ -1,9 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { Leaf, ShoppingBag, X, Plus, Minus, Sun, Droplet, Check, AlertCircle } from "lucide-react";
 
-// Where the backend API lives. Set VITE_API_URL when building for a
-// different environment (staging/prod); defaults to local dev.
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// Where the backend API lives. Empty string means "same origin, relative
+// path" — correct for AWS where the ALB routes /api/* to the backend.
+// We can't use `||` here: an empty string is falsy in JS, so `"" || fallback`
+// would incorrectly resolve back to the fallback instead of staying empty.
+const API_BASE = typeof import.meta.env.VITE_API_URL === "string"
+  ? import.meta.env.VITE_API_URL
+  : "http://localhost:4000";
 
 function Badge({ children }) {
   return (
