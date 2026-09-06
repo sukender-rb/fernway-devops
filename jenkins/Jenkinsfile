@@ -66,28 +66,28 @@ pipeline {
       }
     }
 
-    stage('Code quality (SonarQube)') {
-      when { expression { env.SKIP_BUILD != 'true' } }
-      steps {
-        // 'SonarQube' here must match the server name configured in
-        // Manage Jenkins -> System -> SonarQube servers (see jenkins/README.md).
-        withSonarQubeEnv('SonarQube') {
-          sh 'sonar-scanner'
-        }
-      }
-    }
-
-    stage('Quality gate') {
-      when { expression { env.SKIP_BUILD != 'true' } }
-      steps {
-        // Blocks here and fails the build if SonarQube's quality gate
-        // fails — this only works once SonarQube is configured to call
-        // back to Jenkins via a webhook (also in jenkins/README.md).
-        timeout(time: 5, unit: 'MINUTES') {
-          waitForQualityGate abortPipeline: true
-        }
-      }
-    }
+    // SonarQube isn't deployed yet — these two stages are commented out
+    // until it's stood up (needs its own host with real memory; the
+    // Jenkins box is already tight on RAM). Re-enable once
+    // jenkins/README.md's SonarQube setup is done.
+    //
+    // stage('Code quality (SonarQube)') {
+    //   when { expression { env.SKIP_BUILD != 'true' } }
+    //   steps {
+    //     withSonarQubeEnv('SonarQube') {
+    //       sh 'sonar-scanner'
+    //     }
+    //   }
+    // }
+    //
+    // stage('Quality gate') {
+    //   when { expression { env.SKIP_BUILD != 'true' } }
+    //   steps {
+    //     timeout(time: 5, unit: 'MINUTES') {
+    //       waitForQualityGate abortPipeline: true
+    //     }
+    //   }
+    // }
 
     stage('Build Docker images') {
       when { expression { env.SKIP_BUILD != 'true' } }
@@ -111,18 +111,19 @@ pipeline {
     stage('Push to ECR') {
       when { expression { env.SKIP_BUILD != 'true' } }
       steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-          sh '''
-            aws ecr get-login-password --region $AWS_REGION | \
-              docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+        // No stored AWS keys needed — this box's EC2 instance role
+        // (attached in jenkins-ec2.tf) already grants ECR push access.
+        // aws/docker pick that up automatically via instance metadata.
+        sh '''
+          aws ecr get-login-password --region $AWS_REGION | \
+            docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-            docker tag fernway-backend:${IMAGE_TAG} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-backend:${IMAGE_TAG}
-            docker tag fernway-frontend:${IMAGE_TAG} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-frontend:${IMAGE_TAG}
+          docker tag fernway-backend:${IMAGE_TAG} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-backend:${IMAGE_TAG}
+          docker tag fernway-frontend:${IMAGE_TAG} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-frontend:${IMAGE_TAG}
 
-            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-backend:${IMAGE_TAG}
-            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-frontend:${IMAGE_TAG}
-          '''
-        }
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-backend:${IMAGE_TAG}
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fernway-frontend:${IMAGE_TAG}
+        '''
       }
     }
 
