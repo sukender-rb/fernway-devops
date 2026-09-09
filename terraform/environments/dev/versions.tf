@@ -14,6 +14,14 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.13"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.5"
+    }
   }
 
   # Local state to start. Once this works, switch to an S3 backend so

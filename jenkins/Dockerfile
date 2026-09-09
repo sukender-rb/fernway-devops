@@ -14,6 +14,12 @@ RUN apt-get update && apt-get install -y \
     && apt-get update && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
 
+# Node.js 20 — matches the version used in backend/frontend Dockerfiles
+# (node:20-alpine). Needed for npm ci / npm test / npm run build stages.
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 # kustomize (builds/edits the GitOps overlays in k8s/overlays/*).
 # Downloading the release tarball directly instead of the official
 # install script — the script hit GitHub's anonymous API rate limit

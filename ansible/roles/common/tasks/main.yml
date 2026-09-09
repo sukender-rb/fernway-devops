@@ -1,23 +1,20 @@
 ---
-- name: Update apt cache
-  apt:
+# Amazon Linux 2023 uses dnf, not apt (this box is Amazon Linux, switched
+# from the original Ubuntu plan — see jenkins-ec2.tf for why).
+
+- name: Update all packages
+  dnf:
     update_cache: true
-    cache_valid_time: 3600
+    name: "*"
+    state: latest
 
 - name: Install base packages
-  apt:
+  dnf:
     name:
-      - docker.io
+      - docker
       - git
-      - unattended-upgrades # automatic security patches — basic hardening
+      - unzip
     state: present
-
-- name: Enable automatic security updates
-  copy:
-    dest: /etc/apt/apt.conf.d/20auto-upgrades
-    content: |
-      APT::Periodic::Update-Package-Lists "1";
-      APT::Periodic::Unattended-Upgrade "1";
 
 - name: Ensure Docker is running and enabled
   systemd:
@@ -30,6 +27,22 @@
     name: "{{ ansible_user }}"
     groups: docker
     append: true
+
+- name: Enable dnf automatic security updates
+  dnf:
+    name: dnf-automatic
+    state: present
+
+- name: Configure dnf-automatic for security updates only, applied automatically
+  ini_file:
+    path: /etc/dnf/automatic.conf
+    section: commands
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop:
+    - { option: "apply_updates", value: "yes" }
+    - { option: "upgrade_type", value: "security" }
+  notify: enable dnf-automatic timer
 
 - name: Disable password authentication over SSH
   lineinfile:

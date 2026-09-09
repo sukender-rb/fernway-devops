@@ -3,3 +3,9 @@
   systemd:
     name: sshd
     state: restarted
+
+- name: enable dnf-automatic timer
+  systemd:
+    name: dnf-automatic.timer
+    state: started
+    enabled: true
