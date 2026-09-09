@@ -24,3 +24,14 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  # Known ArgoCD + HPA conflict: backend-hpa actively changes replica count
+  # based on load, but the Deployment manifest in Git also specifies a
+  # fixed replica count. Without this, ArgoCD's selfHeal fights the HPA
+  # every reconcile loop (OutOfSync -> Synced -> OutOfSync, forever).
+  # This tells ArgoCD "the HPA owns this field, don't touch it."
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: backend
+      jsonPointers:
+        - /spec/replicas
