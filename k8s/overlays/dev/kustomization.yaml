@@ -2,19 +2,19 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../base
+- ../../base
 
 # Jenkins rewrites these two lines on every successful dev build via:
 #   kustomize edit set image fernway-backend=<registry>/fernway-backend:<tag>
 # then commits and pushes the change — that commit is what ArgoCD reacts to.
 images:
-  - name: fernway-backend
-    newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-backend
-    newTag: v1
-  - name: fernway-frontend
-    newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-frontend
-    newTag: v1
+- name: fernway-backend
+  newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-backend
+  newTag: 10c65a5
+- name: fernway-frontend
+  newName: 064589995443.dkr.ecr.eu-west-1.amazonaws.com/fernway-frontend
+  newTag: 10c65a5
     
 
 patches:
-  - path: replica-patch.yaml
+- path: replica-patch.yaml
